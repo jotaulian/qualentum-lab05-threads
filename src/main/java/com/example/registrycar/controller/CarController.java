@@ -9,10 +9,12 @@ import com.example.registrycar.service.CarService;
 import com.example.registrycar.service.converters.CarConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -30,6 +32,7 @@ public class CarController {
 
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'VENDOR')")
     public ResponseEntity<Car> getCarById(@PathVariable Integer id) {
         try{
             return ResponseEntity.ok(carService.getCarById(id));
@@ -40,6 +43,7 @@ public class CarController {
 
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('CLIENT', 'VENDOR')")
     public CompletableFuture<?> getAllCars() {
         try{
 
@@ -56,6 +60,7 @@ public class CarController {
 
 
     @PostMapping
+    @PreAuthorize("hasRole('VENDOR')")
     public ResponseEntity<Car> createCar(@RequestBody CarRequest carRequest) {
         try {
             Car savedCar = carService.saveCar(carMapper.toModel(carRequest));
@@ -67,16 +72,18 @@ public class CarController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<Car> updateCar(@PathVariable Integer id, @RequestBody CarRequest carRequest) {
+    @PreAuthorize("hasRole('VENDOR')")
+    public ResponseEntity<Void> updateCar(@PathVariable Integer id, @RequestBody CarRequest carRequest) {
         try {
             carService.updateCar(id, carMapper.toModel(carRequest));
             return ResponseEntity.ok().build();
-        }catch (Exception e){
+        } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('VENDOR')")
     public ResponseEntity<Void> deleteCar(@PathVariable Integer id) {
         return carService.deleteCar(id)
                 ? ResponseEntity.ok().build()

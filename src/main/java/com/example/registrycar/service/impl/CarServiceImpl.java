@@ -5,7 +5,8 @@ import com.example.registrycar.entity.CarEntity;
 import com.example.registrycar.repository.CarRepository;
 import com.example.registrycar.service.CarService;
 import com.example.registrycar.service.converters.CarConverter;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.NoSuchElementException;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -54,16 +55,14 @@ public class CarServiceImpl implements CarService {
 
     @Override
     public Car updateCar(Integer id, Car car) {
-        Optional<CarEntity> carOptional = carRepository.findById(id);
+        // Si no se encuentra, lanza NoSuchElementException
+        carRepository.findById(id).orElseThrow(NoSuchElementException::new);
 
-        if(carOptional.isPresent()){
-            CarEntity carEntity = carConverter.toEntity(car);
-            carEntity.setId(id);
+        CarEntity carEntity = carConverter.toEntity(car);
+        carEntity.setId(id);
 
-            return carConverter.toCar(carRepository.save(carEntity));
-        }
-
-        return null;
+        CarEntity updatedCarEntity = carRepository.save(carEntity);
+        return carConverter.toCar(updatedCarEntity);
     }
 
     @Override
